@@ -1,0 +1,22 @@
+WITH vars AS (SELECT
+    '0xfbe7283b6b110655c399b24a2d4dbb46ac5938c0' AS john_kraken_deposits,
+    '0x0c2ca7543b2c4b7f200d9c9be40f99e51ce7755e' AS john_binance_us_deposits,
+    '0x5a64d8651f452cc2224c0eb4a89a428a57424c48' AS john_coinbase_deposits,
+    6 AS usdc_eth_decimals,
+    6 AS usdt_eth_decimals,
+    18 AS busd_bsc_decimals,
+    DATE('2021-03-02') AS sfm_launch_date
+),
+usdc AS (
+    SELECT SUM(value / POWER(10, v.usdc_eth_decimals)) AS usdc_total,
+        DATE_FORMAT(tt.evt_block_time, 'yyyy-MM') AS year_month
+    FROM circle_ethereum.USDC_evt_Transfer tt
+    JOIN vars v ON 1 = 1
+    WHERE tt.to IN (v.john_kraken_deposits, v.john_binance_us_deposits, v.john_coinbase_deposits)
+    AND tt.evt_block_time >= v.sfm_launch_date
+    GROUP BY year_month
+),
+usdt AS (
+    SELECT SUM(value / POWER(10, v.usdt_eth_decimals)) AS usdt_total,
+        DATE_FORMAT(tt.evt_block_time, 'yyyy-MM') AS year_month
+    FROM tether_ethereum.Tether_USD_evt_Transfer tt
